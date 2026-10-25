@@ -5,202 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="#f4f5ef">
 	<title>Classroom | Attendance</title>
-	<style>
-		:root {
-			color-scheme: light;
-			--ink: #1c302e;
-			--muted: #687875;
-			--line: #dfe5df;
-			--paper: #ffffff;
-			--canvas: #f4f5ef;
-			--forest: #24594c;
-			--mint: #dceee4;
-			--lime: #c8e46b;
-			--amber: #f4d287;
-			--rose: #f5dfd7;
-			--shadow: 0 12px 32px rgba(28, 48, 46, .06);
-		}
-
-		* { box-sizing: border-box; }
-		body {
-			margin: 0;
-			background: var(--canvas);
-			color: var(--ink);
-			font: 15px/1.5 "Segoe UI", sans-serif;
-		}
-		button, select, input { font: inherit; }
-		button { cursor: pointer; }
-		.shell { min-height: 100vh; }
-		.topbar {
-			height: 76px;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 0 4.5vw;
-			background: var(--paper);
-			border-bottom: 1px solid var(--line);
-		}
-		.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
-		.brand-mark {
-			display: grid;
-			place-items: center;
-			width: 38px;
-			height: 38px;
-			background: var(--forest);
-			color: white;
-			border-radius: 12px;
-			font-family: Georgia, serif;
-			font-size: 20px;
-		}
-		.brand-name { font-family: Georgia, serif; font-size: 20px; letter-spacing: 0; }
-		.topbar-right { display: flex; align-items: center; gap: 20px; }
-		.today { color: var(--muted); font-size: 13px; }
-		.role-switch {
-			display: inline-flex;
-			gap: 3px;
-			padding: 4px;
-			background: #eef1eb;
-			border: 1px solid var(--line);
-			border-radius: 10px;
-		}
-		.role-switch button {
-			border: 0;
-			padding: 7px 12px;
-			color: var(--muted);
-			background: transparent;
-			border-radius: 7px;
-			font-size: 13px;
-		}
-		.role-switch button[aria-pressed="true"] {
-			color: var(--ink);
-			background: white;
-			box-shadow: 0 1px 4px rgba(28, 48, 46, .12);
-		}
-		main { max-width: 1320px; margin: 0 auto; padding: 34px 4.5vw 56px; }
-		.demo-note {
-			display: flex;
-			gap: 10px;
-			align-items: flex-start;
-			margin-bottom: 26px;
-			padding: 12px 15px;
-			color: #4f5a3c;
-			background: #f0f3dc;
-			border: 1px solid #e4e9c5;
-			border-radius: 9px;
-			font-size: 13px;
-		}
-		.demo-note strong { color: var(--ink); }
-		.eyebrow { margin: 0 0 7px; color: var(--forest); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
-		h1, h2, h3, p { margin-top: 0; }
-		h1 { margin-bottom: 6px; font: 36px/1.15 Georgia, serif; letter-spacing: 0; }
-		h2 { margin-bottom: 4px; font: 22px/1.2 Georgia, serif; letter-spacing: 0; }
-		h3 { margin-bottom: 0; font-size: 15px; }
-		.subheading { margin-bottom: 0; color: var(--muted); }
-		.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 25px; }
-		.class-select {
-			min-width: 170px;
-			padding: 10px 34px 10px 12px;
-			color: var(--ink);
-			background: white;
-			border: 1px solid var(--line);
-			border-radius: 8px;
-		}
-		.overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
-		.metric, .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
-		.metric { min-height: 132px; padding: 18px; }
-		.metric-label { color: var(--muted); font-size: 13px; }
-		.metric-value { margin: 10px 0 2px; font: 30px/1 Georgia, serif; }
-		.metric-foot { color: var(--muted); font-size: 12px; }
-		.metric-accent { border-top: 3px solid var(--lime); }
-		.metric-amber { border-top: 3px solid var(--amber); }
-		.roster-panel { overflow: hidden; }
-		.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 19px 20px; border-bottom: 1px solid var(--line); }
-		.panel-head p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
-		.table-tools { display: flex; align-items: center; gap: 9px; }
-		.search {
-			width: 205px;
-			padding: 9px 11px;
-			border: 1px solid var(--line);
-			border-radius: 7px;
-			outline-color: var(--forest);
-		}
-		.table-wrap { overflow-x: auto; }
-		table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
-		th { padding: 11px 20px; color: var(--muted); background: #f9faf7; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
-		td { padding: 14px 20px; border-top: 1px solid #edf0eb; font-size: 13px; }
-		tbody tr:hover { background: #fbfcf9; }
-		.student-cell { display: flex; align-items: center; gap: 10px; }
-		.avatar { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; color: var(--forest); background: var(--mint); border-radius: 50%; font-size: 11px; font-weight: 700; }
-		.student-name { font-weight: 600; }
-		.student-id { color: var(--muted); font-size: 11px; }
-		.status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; font-size: 12px; }
-		.status::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; }
-		.present { color: #28654f; background: #e4f2e8; }
-		.late { color: #88621b; background: #fbf0d9; }
-		.absent { color: #9a5145; background: #f8e8e3; }
-		.status-select { padding: 5px 8px; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 6px; }
-		.teacher-scope { margin: 12px 2px 0; color: var(--muted); font-size: 12px; }
-		.student-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, .8fr); gap: 18px; }
-		.student-welcome { padding: 23px; background: var(--forest); color: white; border-radius: 10px; }
-		.student-welcome .eyebrow { color: var(--lime); }
-		.student-welcome h2 { margin-bottom: 8px; font-size: 27px; }
-		.student-welcome p { margin-bottom: 0; color: #d7e4dc; }
-		.student-stat { display: flex; align-items: center; gap: 18px; margin-top: 22px; }
-		.attendance-ring {
-			display: grid;
-			place-items: center;
-			width: 92px;
-			height: 92px;
-			flex: 0 0 92px;
-			background: conic-gradient(var(--lime) 0 94%, rgba(255,255,255,.19) 94% 100%);
-			border-radius: 50%;
-		}
-		.attendance-ring span { display: grid; place-items: center; width: 72px; height: 72px; color: var(--ink); background: var(--forest); border-radius: 50%; font-size: 19px; font-weight: 700; }
-		.stat-copy strong { display: block; font-size: 16px; }
-		.stat-copy span { color: #d7e4dc; font-size: 13px; }
-		.face-panel { padding: 21px; }
-		.face-panel p { margin: 8px 0 14px; color: var(--muted); font-size: 13px; }
-		.camera-consent { display: grid; gap: 12px; margin-top: 14px; }
-		.camera-consent label { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 12px; }
-		.camera-consent input { margin-top: 3px; accent-color: var(--forest); }
-		.camera-stage { overflow: hidden; aspect-ratio: 4 / 3; background: #172421; border-radius: 8px; }
-		.camera-stage video, .camera-stage canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
-		.camera-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-		.camera-button { padding: 9px 12px; color: white; background: var(--forest); border: 1px solid var(--forest); border-radius: 7px; }
-		.camera-button.secondary { color: var(--ink); background: white; border-color: var(--line); }
-		.camera-button:disabled { cursor: not-allowed; opacity: .5; }
-		.camera-status { min-height: 20px; margin: 0 !important; color: var(--muted); font-size: 12px; }
-		.camera-status[data-state="error"] { color: #9a5145; }
-		.camera-status[data-state="success"] { color: #28654f; }
-		.history { grid-column: 1 / -1; overflow: hidden; }
-		.history .panel-head { padding: 17px 20px; }
-		.empty-filter { padding: 24px; color: var(--muted); text-align: center; }
-		.toast { position: fixed; right: 22px; bottom: 22px; padding: 12px 16px; color: white; background: var(--ink); border-radius: 8px; box-shadow: var(--shadow); opacity: 0; transform: translateY(8px); transition: .2s ease; pointer-events: none; }
-		.toast.show { opacity: 1; transform: translateY(0); }
-		[hidden] { display: none !important; }
-		@media (max-width: 760px) {
-			.topbar { height: auto; min-height: 68px; padding: 12px 5vw; }
-			.topbar-right { gap: 10px; }
-			.today { display: none; }
-			main { padding: 24px 5vw 40px; }
-			h1 { font-size: 31px; }
-			.overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-			.page-head { align-items: flex-start; flex-direction: column; }
-			.panel-head { align-items: flex-start; flex-direction: column; }
-			.table-tools, .search { width: 100%; }
-			.table-tools { flex-wrap: wrap; }
-			th, td { padding-right: 14px; padding-left: 14px; }
-			.student-layout { grid-template-columns: 1fr; }
-			.history { grid-column: auto; }
-		}
-		@media (max-width: 430px) {
-			.brand-name { font-size: 17px; }
-			.brand-mark { width: 33px; height: 33px; }
-			.role-switch button { padding: 7px 8px; font-size: 12px; }
-			.metric { min-height: 116px; padding: 14px; }
-			.metric-value { font-size: 26px; }
-		}
-	</style>
+	<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 	<div class="shell">
@@ -210,16 +15,39 @@
 				<span class="brand-name">Classroom</span>
 			</div>
 			<div class="topbar-right">
-				<span class="today" id="today"></span>
-				<div class="role-switch" aria-label="Demo view selector">
-					<button type="button" data-role="teacher" aria-pressed="true">Teacher</button>
-					<button type="button" data-role="student" aria-pressed="false">Student</button>
+				<span class="today" id="today" hidden></span>
+				<div class="account-controls" id="account-controls" hidden>
+					<span class="account-role" id="account-role"></span>
+					<button class="logout-button" id="logout-button" type="button">Sign out</button>
 				</div>
 			</div>
 		</header>
 
 		<main>
-			<div class="demo-note"><span aria-hidden="true">i</span><span><strong>Demo mode.</strong> Role switching is for preview only. A production system needs server-side permissions and a consent-based face verification service; this page does not collect or recognize faces.</span></div>
+			<section class="login-screen" id="login-screen" aria-labelledby="login-title">
+				<div class="login-intro">
+					<p class="eyebrow">Classroom attendance</p>
+					<h1>Attendance, in one place.</h1>
+					<p>Sign in to review your class or your own attendance record.</p>
+					<div class="login-note"><strong>Demo sign-in</strong><span>This prototype does not verify or save credentials. Use any valid email and password to preview a role.</span></div>
+				</div>
+				<form class="login-panel" id="login-form">
+					<p class="eyebrow">Welcome back</p>
+					<h2 id="login-title">Sign in</h2>
+					<p class="login-helper">Choose your account type to continue.</p>
+					<div class="login-role-picker" aria-label="Account type">
+						<button type="button" data-login-role="teacher" aria-pressed="true">Teacher</button>
+						<button type="button" data-login-role="student" aria-pressed="false">Student</button>
+					</div>
+					<label class="login-field">Email address<input id="login-email" name="email" type="email" autocomplete="username" placeholder="name@school.edu" required></label>
+					<label class="login-field">Password<input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required></label>
+					<button class="login-submit" type="submit">Sign in</button>
+					<p class="login-status" id="login-status" role="status" aria-live="polite">Demo only. No credentials are sent or stored.</p>
+				</form>
+			</section>
+
+			<div id="attendance-app" hidden>
+			<div class="demo-note"><span aria-hidden="true">i</span><span><strong>Demo mode.</strong> Login only selects a preview role; it does not authenticate accounts. Production use needs server-side access controls and a consent-based face verification service.</span></div>
 
 			<section id="teacher-view" aria-labelledby="teacher-title">
 				<div class="page-head">
@@ -309,225 +137,11 @@
 				</div>
 				<p class="teacher-scope">Student access is limited to Ava Johnson's sample attendance record. This front-end demo does not enforce real account permissions.</p>
 			</section>
+			</div>
 		</main>
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script>
-		const students = [
-			{ id: "80421", name: "Ava Johnson", time: "8:04 AM", status: "Present" },
-			{ id: "80422", name: "Noah Williams", time: "8:07 AM", status: "Present" },
-			{ id: "80423", name: "Mia Chen", time: "8:01 AM", status: "Present" },
-			{ id: "80424", name: "Ethan Patel", time: "8:19 AM", status: "Late" },
-			{ id: "80425", name: "Sofia Garcia", time: "—", status: "Absent" },
-			{ id: "80426", name: "Oliver Brown", time: "—", status: "Absent" }
-		];
-		const allowedStatuses = ["Present", "Late", "Absent"];
-		const storageKey = "classroom-demo-attendance-v1";
-		const savedStatuses = JSON.parse(localStorage.getItem(storageKey) || "{}");
-		students.forEach((student) => {
-			if (allowedStatuses.includes(savedStatuses[student.id])) student.status = savedStatuses[student.id];
-		});
-
-		const rosterBody = document.querySelector("#roster-body");
-		const searchInput = document.querySelector("#student-search");
-		const toast = document.querySelector("#toast");
-		const cameraConsent = document.querySelector("#camera-consent");
-		const cameraStage = document.querySelector("#camera-stage");
-		const cameraVideo = document.querySelector("#camera-video");
-		const captureCanvas = document.querySelector("#capture-canvas");
-		const cameraStatus = document.querySelector("#camera-status");
-		const startCameraButton = document.querySelector("#start-camera");
-		const captureButton = document.querySelector("#capture-face");
-		const stopCameraButton = document.querySelector("#stop-camera");
-		const retakeButton = document.querySelector("#retake-capture");
-		const finishCaptureButton = document.querySelector("#finish-capture");
-		let cameraStream = null;
-		let toastTimer;
-
-		function setCameraStatus(message, state = "") {
-			cameraStatus.textContent = message;
-			cameraStatus.dataset.state = state;
-		}
-
-		function stopCamera() {
-			cameraStream?.getTracks().forEach((track) => track.stop());
-			cameraStream = null;
-			cameraVideo.srcObject = null;
-			cameraStage.hidden = true;
-			cameraVideo.hidden = true;
-			captureButton.hidden = true;
-			stopCameraButton.hidden = true;
-			startCameraButton.hidden = false;
-		}
-
-		function clearCapture() {
-			const context = captureCanvas.getContext("2d");
-			context?.clearRect(0, 0, captureCanvas.width, captureCanvas.height);
-			captureCanvas.width = 0;
-			captureCanvas.height = 0;
-			captureCanvas.hidden = true;
-			retakeButton.hidden = true;
-			finishCaptureButton.hidden = true;
-			startCameraButton.hidden = false;
-			cameraStage.hidden = true;
-			cameraConsent.checked = false;
-			startCameraButton.disabled = true;
-		}
-
-		async function startCamera() {
-			if (!cameraConsent.checked) return;
-			if (!navigator.mediaDevices?.getUserMedia) {
-				setCameraStatus("Camera access is unavailable here. Use HTTPS or localhost, or ask your teacher to record attendance.", "error");
-				return;
-			}
-			startCameraButton.disabled = true;
-			setCameraStatus("Waiting for camera permission...");
-			try {
-				cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-				cameraVideo.srcObject = cameraStream;
-				cameraStage.hidden = false;
-				cameraVideo.hidden = false;
-				startCameraButton.hidden = true;
-				captureButton.hidden = false;
-				stopCameraButton.hidden = false;
-				setCameraStatus("Live preview is on. Capture only when ready.");
-			} catch {
-				startCameraButton.disabled = !cameraConsent.checked;
-				setCameraStatus("Camera permission was denied or no camera is available. You can ask your teacher to record attendance.", "error");
-			}
-		}
-
-		function captureFace() {
-			if (!cameraStream || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
-				setCameraStatus("The camera is not ready yet. Wait for the preview and try again.", "error");
-				return;
-			}
-			captureCanvas.width = cameraVideo.videoWidth;
-			captureCanvas.height = cameraVideo.videoHeight;
-			captureCanvas.getContext("2d").drawImage(cameraVideo, 0, 0);
-			stopCamera();
-			cameraStage.hidden = false;
-			captureCanvas.hidden = false;
-			startCameraButton.hidden = true;
-			retakeButton.hidden = false;
-			finishCaptureButton.hidden = false;
-			setCameraStatus("Snapshot captured in this page only. Identity is not verified; attendance is not yet marked.");
-		}
-
-		cameraConsent.addEventListener("change", () => {
-			startCameraButton.disabled = !cameraConsent.checked;
-			if (!cameraConsent.checked) {
-				stopCamera();
-				clearCapture();
-				setCameraStatus("Consent withdrawn. Camera stopped and snapshot cleared.");
-			}
-		});
-		startCameraButton.addEventListener("click", startCamera);
-		captureButton.addEventListener("click", captureFace);
-		stopCameraButton.addEventListener("click", () => {
-			stopCamera();
-			setCameraStatus("Camera stopped. No image was captured.");
-		});
-		retakeButton.addEventListener("click", () => {
-			clearCapture();
-			setCameraStatus("Snapshot cleared. Give consent again to restart the camera.");
-		});
-		finishCaptureButton.addEventListener("click", () => {
-			clearCapture();
-			setCameraStatus("Capture finished and cleared. Ask your teacher to confirm your identity and record attendance.", "success");
-		});
-
-		function initials(name) {
-			return name.split(" ").map((part) => part[0]).slice(0, 2).join("");
-		}
-
-		function renderRoster() {
-			const query = searchInput.value.trim().toLowerCase();
-			const visibleStudents = students.filter((student) => `${student.name} ${student.id}`.toLowerCase().includes(query));
-			rosterBody.replaceChildren();
-			visibleStudents.forEach((student) => {
-				const row = document.createElement("tr");
-				const nameCell = document.createElement("td");
-				const identity = document.createElement("div");
-				identity.className = "student-cell";
-				const avatar = document.createElement("span");
-				avatar.className = "avatar";
-				avatar.textContent = initials(student.name);
-				const name = document.createElement("span");
-				name.className = "student-name";
-				name.textContent = student.name;
-				identity.append(avatar, name);
-				nameCell.append(identity);
-
-				const idCell = document.createElement("td");
-				idCell.textContent = student.id;
-				const timeCell = document.createElement("td");
-				timeCell.textContent = student.status === "Absent" ? "—" : student.time;
-				const statusCell = document.createElement("td");
-				const select = document.createElement("select");
-				select.className = "status-select";
-				select.setAttribute("aria-label", `Attendance status for ${student.name}`);
-				allowedStatuses.forEach((status) => {
-					const option = document.createElement("option");
-					option.value = status;
-					option.textContent = status;
-					option.selected = student.status === status;
-					select.append(option);
-				});
-				select.addEventListener("change", () => updateStatus(student, select.value));
-				statusCell.append(select);
-				row.append(nameCell, idCell, timeCell, statusCell);
-				rosterBody.append(row);
-			});
-			document.querySelector("#empty-filter").hidden = visibleStudents.length !== 0;
-			updateMetrics();
-		}
-
-		function updateMetrics() {
-			const present = students.filter((student) => student.status === "Present").length;
-			const late = students.filter((student) => student.status === "Late").length;
-			const absent = students.filter((student) => student.status === "Absent").length;
-			document.querySelector("#metric-enrolled").textContent = students.length;
-			document.querySelector("#metric-present").textContent = present + late;
-			document.querySelector("#metric-absent").textContent = absent;
-			document.querySelector("#metric-rate").textContent = `${Math.round(((present + late) / students.length) * 100)}%`;
-		}
-
-		function updateStatus(student, status) {
-			if (!allowedStatuses.includes(status)) return;
-			student.status = status;
-			localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(students.map((item) => [item.id, item.status]))));
-			renderRoster();
-			showToast(`${student.name}'s status updated to ${status.toLowerCase()}.`);
-		}
-
-		function showToast(message) {
-			toast.textContent = message;
-			toast.classList.add("show");
-			clearTimeout(toastTimer);
-			toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
-		}
-
-		document.querySelectorAll("[data-role]").forEach((button) => {
-			button.addEventListener("click", () => {
-				const isTeacher = button.dataset.role === "teacher";
-				if (isTeacher) {
-					stopCamera();
-					clearCapture();
-				}
-				document.querySelector("#teacher-view").hidden = !isTeacher;
-				document.querySelector("#student-view").hidden = isTeacher;
-				document.querySelectorAll("[data-role]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-			});
-		});
-		searchInput.addEventListener("input", renderRoster);
-		document.querySelector("#today").textContent = new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric" }).format(new Date());
-		window.addEventListener("pagehide", () => {
-			stopCamera();
-			clearCapture();
-		});
-		renderRoster();
-	</script>
+	<script src="app.js" defer></script>
 </body>
 </html>
