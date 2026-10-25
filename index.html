@@ -160,7 +160,18 @@
 		.stat-copy span { color: #d7e4dc; font-size: 13px; }
 		.face-panel { padding: 21px; }
 		.face-panel p { margin: 8px 0 14px; color: var(--muted); font-size: 13px; }
-		.unavailable { padding: 12px; color: #795a21; background: #fbf3df; border: 1px solid #f0e3bd; border-radius: 8px; font-size: 12px; }
+		.camera-consent { display: grid; gap: 12px; margin-top: 14px; }
+		.camera-consent label { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 12px; }
+		.camera-consent input { margin-top: 3px; accent-color: var(--forest); }
+		.camera-stage { overflow: hidden; aspect-ratio: 4 / 3; background: #172421; border-radius: 8px; }
+		.camera-stage video, .camera-stage canvas { display: block; width: 100%; height: 100%; object-fit: cover; }
+		.camera-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+		.camera-button { padding: 9px 12px; color: white; background: var(--forest); border: 1px solid var(--forest); border-radius: 7px; }
+		.camera-button.secondary { color: var(--ink); background: white; border-color: var(--line); }
+		.camera-button:disabled { cursor: not-allowed; opacity: .5; }
+		.camera-status { min-height: 20px; margin: 0 !important; color: var(--muted); font-size: 12px; }
+		.camera-status[data-state="error"] { color: #9a5145; }
+		.camera-status[data-state="success"] { color: #28654f; }
 		.history { grid-column: 1 / -1; overflow: hidden; }
 		.history .panel-head { padding: 17px 20px; }
 		.empty-filter { padding: 24px; color: var(--muted); text-align: center; }
@@ -264,9 +275,23 @@
 					</section>
 					<section class="panel face-panel" aria-labelledby="checkin-title">
 						<p class="eyebrow">Today's check-in</p>
-						<h2 id="checkin-title">Face verification</h2>
-						<p>Check in using your school's approved face verification service.</p>
-						<div class="unavailable">Unavailable in this demo. No camera is opened and no attendance is recorded.</div>
+						<h2 id="checkin-title">Live face capture</h2>
+						<p>Capture a snapshot for a teacher-assisted check-in. This demo does not match identities.</p>
+						<div class="camera-consent">
+							<label><input id="camera-consent" type="checkbox"> I agree to open the camera for a temporary preview. The image stays in this page and is cleared when I finish.</label>
+							<div class="camera-stage" id="camera-stage" hidden>
+								<video id="camera-video" autoplay muted playsinline aria-label="Live camera preview" hidden></video>
+								<canvas id="capture-canvas" aria-label="Captured face snapshot" hidden></canvas>
+							</div>
+							<div class="camera-actions">
+								<button class="camera-button" id="start-camera" type="button" disabled>Start camera</button>
+								<button class="camera-button" id="capture-face" type="button" hidden>Capture snapshot</button>
+								<button class="camera-button secondary" id="stop-camera" type="button" hidden>Stop camera</button>
+								<button class="camera-button secondary" id="retake-capture" type="button" hidden>Retake</button>
+								<button class="camera-button" id="finish-capture" type="button" hidden>Finish capture</button>
+							</div>
+							<p class="camera-status" id="camera-status" role="status" aria-live="polite">Camera is off. Attendance requires teacher confirmation.</p>
+						</div>
 					</section>
 					<section class="panel history" aria-labelledby="history-title">
 						<div class="panel-head"><div><h2 id="history-title">Recent attendance</h2><p>Visible only to you in the student view.</p></div></div>
@@ -307,7 +332,111 @@
 		const rosterBody = document.querySelector("#roster-body");
 		const searchInput = document.querySelector("#student-search");
 		const toast = document.querySelector("#toast");
+		const cameraConsent = document.querySelector("#camera-consent");
+		const cameraStage = document.querySelector("#camera-stage");
+		const cameraVideo = document.querySelector("#camera-video");
+		const captureCanvas = document.querySelector("#capture-canvas");
+		const cameraStatus = document.querySelector("#camera-status");
+		const startCameraButton = document.querySelector("#start-camera");
+		const captureButton = document.querySelector("#capture-face");
+		const stopCameraButton = document.querySelector("#stop-camera");
+		const retakeButton = document.querySelector("#retake-capture");
+		const finishCaptureButton = document.querySelector("#finish-capture");
+		let cameraStream = null;
 		let toastTimer;
+
+		function setCameraStatus(message, state = "") {
+			cameraStatus.textContent = message;
+			cameraStatus.dataset.state = state;
+		}
+
+		function stopCamera() {
+			cameraStream?.getTracks().forEach((track) => track.stop());
+			cameraStream = null;
+			cameraVideo.srcObject = null;
+			cameraStage.hidden = true;
+			cameraVideo.hidden = true;
+			captureButton.hidden = true;
+			stopCameraButton.hidden = true;
+			startCameraButton.hidden = false;
+		}
+
+		function clearCapture() {
+			const context = captureCanvas.getContext("2d");
+			context?.clearRect(0, 0, captureCanvas.width, captureCanvas.height);
+			captureCanvas.width = 0;
+			captureCanvas.height = 0;
+			captureCanvas.hidden = true;
+			retakeButton.hidden = true;
+			finishCaptureButton.hidden = true;
+			startCameraButton.hidden = false;
+			cameraStage.hidden = true;
+			cameraConsent.checked = false;
+			startCameraButton.disabled = true;
+		}
+
+		async function startCamera() {
+			if (!cameraConsent.checked) return;
+			if (!navigator.mediaDevices?.getUserMedia) {
+				setCameraStatus("Camera access is unavailable here. Use HTTPS or localhost, or ask your teacher to record attendance.", "error");
+				return;
+			}
+			startCameraButton.disabled = true;
+			setCameraStatus("Waiting for camera permission...");
+			try {
+				cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+				cameraVideo.srcObject = cameraStream;
+				cameraStage.hidden = false;
+				cameraVideo.hidden = false;
+				startCameraButton.hidden = true;
+				captureButton.hidden = false;
+				stopCameraButton.hidden = false;
+				setCameraStatus("Live preview is on. Capture only when ready.");
+			} catch {
+				startCameraButton.disabled = !cameraConsent.checked;
+				setCameraStatus("Camera permission was denied or no camera is available. You can ask your teacher to record attendance.", "error");
+			}
+		}
+
+		function captureFace() {
+			if (!cameraStream || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+				setCameraStatus("The camera is not ready yet. Wait for the preview and try again.", "error");
+				return;
+			}
+			captureCanvas.width = cameraVideo.videoWidth;
+			captureCanvas.height = cameraVideo.videoHeight;
+			captureCanvas.getContext("2d").drawImage(cameraVideo, 0, 0);
+			stopCamera();
+			cameraStage.hidden = false;
+			captureCanvas.hidden = false;
+			startCameraButton.hidden = true;
+			retakeButton.hidden = false;
+			finishCaptureButton.hidden = false;
+			setCameraStatus("Snapshot captured in this page only. Identity is not verified; attendance is not yet marked.");
+		}
+
+		cameraConsent.addEventListener("change", () => {
+			startCameraButton.disabled = !cameraConsent.checked;
+			if (!cameraConsent.checked) {
+				stopCamera();
+				clearCapture();
+				setCameraStatus("Consent withdrawn. Camera stopped and snapshot cleared.");
+			}
+		});
+		startCameraButton.addEventListener("click", startCamera);
+		captureButton.addEventListener("click", captureFace);
+		stopCameraButton.addEventListener("click", () => {
+			stopCamera();
+			setCameraStatus("Camera stopped. No image was captured.");
+		});
+		retakeButton.addEventListener("click", () => {
+			clearCapture();
+			setCameraStatus("Snapshot cleared. Give consent again to restart the camera.");
+		});
+		finishCaptureButton.addEventListener("click", () => {
+			clearCapture();
+			setCameraStatus("Capture finished and cleared. Ask your teacher to confirm your identity and record attendance.", "success");
+		});
 
 		function initials(name) {
 			return name.split(" ").map((part) => part[0]).slice(0, 2).join("");
@@ -383,6 +512,10 @@
 		document.querySelectorAll("[data-role]").forEach((button) => {
 			button.addEventListener("click", () => {
 				const isTeacher = button.dataset.role === "teacher";
+				if (isTeacher) {
+					stopCamera();
+					clearCapture();
+				}
 				document.querySelector("#teacher-view").hidden = !isTeacher;
 				document.querySelector("#student-view").hidden = isTeacher;
 				document.querySelectorAll("[data-role]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
@@ -390,6 +523,10 @@
 		});
 		searchInput.addEventListener("input", renderRoster);
 		document.querySelector("#today").textContent = new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric" }).format(new Date());
+		window.addEventListener("pagehide", () => {
+			stopCamera();
+			clearCapture();
+		});
 		renderRoster();
 	</script>
 </body>
